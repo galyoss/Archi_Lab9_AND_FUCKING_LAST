@@ -60,10 +60,16 @@ _start:
 	mov	ebp, esp
 	sub	esp, STK_RES            ; Set up ebp and reserve space on the stack for local storage
 	;CODE START
-	
+	open FileName, 0, 0111 		; open FileName with readonly and 111 permissions  (read)
+	mov esi, eax				; save eax (fd) into esi, an empty register
+	read esi, STK_RES, 4
+	cmp dword [STK_RES], 0x7f454c46 ;cmp STK_RES to elf magic bytes
+	jne _print_failure
+	write 1, OutStr, 32 
 
 
-
+	_print_failure:
+		write 1, Failstr, 13 
 
 
 VirusExit:
@@ -72,7 +78,7 @@ VirusExit:
 	
 FileName:	db "ELFexec1", 0
 OutStr:		db "The lab 9 proto-virus strikes!", 10, 0
-Failstr:        db "perhaps not", 10 , 0
+Failstr:    db "perhaps not", 10 , 0
 	
 
 get_my_loc:
