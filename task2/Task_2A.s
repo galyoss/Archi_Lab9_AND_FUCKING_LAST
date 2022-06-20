@@ -79,9 +79,9 @@ _start:
 	;now we should find the virt address the elf file is being read to
 	;using go to ph_section->ph_viruaddress
 	lseek esi, 0, SEEK_SET
-	mov edx, esp
-	add edx, 20
-	read esi, edx, ELFHDR_size	;read the ELF header into esp+20
+	mov edi, esp
+	add edi, 20
+	read esi, edi, ELFHDR_size	;read the ELF header into esp+20
 	lseek esi, [esp+20+ELFHDR_phoff], SEEK_SET		;set fd pointer to the first ph
 	lea edx, [esp+12]
 	read esi, edx, 4 		;read the first ph offset into esp+12
