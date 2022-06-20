@@ -6,7 +6,7 @@
 %endmacro
 
 %macro	syscall3 4
-	mov	esi, %4
+	mov	edx, %4
 	mov	ecx, %3
 	mov	ebx, %2
 	mov	eax, %1
@@ -46,7 +46,7 @@
 %define PHDR_start	28
 %define	PHDR_size	32
 %define PHDR_memsize	20	
-%define PHDR_filesize	16
+%define PHDR_filedxze	16
 %define	PHDR_offset	4
 %define	PHDR_vaddr	8
 %define ELFHDR_size 52
@@ -61,7 +61,7 @@ _start:
 	sub	esp, STK_RES            ; Set up ebp and reserve space on the stack for local storage
 	;CODE START
 	open FileName, 2, 0777 		; open FileName with readonly and 111 permissions  (read)
-	mov esi, eax				; save fd in esi
+	mov esi, eax				; save fd in edx
 	cmp esi, 0
 	jl _print_failure
 	read esi, esp, 4			; read first 4 bytes into esp (reserved place)
