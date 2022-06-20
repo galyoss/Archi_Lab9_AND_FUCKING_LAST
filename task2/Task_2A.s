@@ -82,7 +82,7 @@ _start:
 	read esi, [esp+20], ELFHDR_size	;read the ELF header into esp+20
 	lseek esi, [esp+20+ELFHDR_phoff], SEEK_SET		;set fd pointer to the first ph
 	read esi, [esp+12], SEEK_SET			;read the first ph offset into esp+12
-	lseek esi, [esp+12+PHDR_start+ph_viruaddress], SEEK_SET	;set fd to the first ph va
+	lseek esi, [esp+12+PHDR_start+PHDR_vaddr], SEEK_SET	;set fd to the first ph va
 	read esi, [esp+12], 4				;read the va into esp+12
 
 	mov eax, eax						; flag for debug - so it'll be easy to find the line
