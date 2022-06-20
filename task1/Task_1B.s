@@ -60,7 +60,7 @@ _start:
 	mov	ebp, esp
 	sub	esp, STK_RES            ; Set up ebp and reserve space on the stack for local storage
 	;CODE START
-	open FileName, 2, 777 		; open FileName with readonly and 111 permissions  (read)
+	open FileName, 2, 0777 		; open FileName with readonly and 111 permissions  (read)
 	mov edx, eax				; save fd in edx
 	cmp edx, 0
 	jl _print_failure
